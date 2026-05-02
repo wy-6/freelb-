@@ -127,14 +127,15 @@ def freelbpp_train_step(
 
     input_ids = batch.pop("input_ids")
     attention_mask = batch.get("attention_mask")
-    embeds = model.get_input_embeddings()(input_ids)
 
-    delta = init_delta(embeds, attention_mask, adv_init_mag).detach()
+    init_embeds = model.get_input_embeddings()(input_ids)
+    delta = init_delta(init_embeds, attention_mask, adv_init_mag).detach()
     delta.requires_grad_()
 
     total_loss = 0.0
     steps = max(adv_steps, 1)
     for step in range(steps):
+        embeds = model.get_input_embeddings()(input_ids)
         outputs = model(inputs_embeds=embeds + delta, **batch)
         loss = outputs.loss / steps
         total_loss += loss.item()
